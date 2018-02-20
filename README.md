@@ -4,7 +4,7 @@ cmakegen
 This is a basic little program, similar to `cargo-new`. Basic use is just
 
 ```
-source/__init__.py project-name
+cmakegen project-name
 ```
 
 to create an executable project named `project-name`
