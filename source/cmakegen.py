@@ -38,6 +38,7 @@ def main():
   ap.add_argument(
       "--std",
       nargs="?",
+      choices=[14, 17],
       default=default_cxx_version,
       help=standard_version_help,
       metavar="N")
