@@ -3,12 +3,14 @@ cmake_minimum_required(VERSION 3.6)
 project(libtestlib VERSION 0.1 LANGUAGES CXX)
 
 add_library(libtestlib
-  source/library.cpp)
+  source/testlib.cpp)
 
-target_include_directories(libtestlib PUBLIC
+target_include_directories(libtestlib
+  PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-    PRIVATE source)
+  PRIVATE
+    source)
 
 target_compile_features(libtestlib PUBLIC cxx_std_14)
 
@@ -21,10 +23,15 @@ if(MSVC)
   target_compile_options(libtestlib
     PUBLIC
       /D_SCL_SECURE_NO_WARNINGS
+      /permissive-
     PRIVATE
-      /W4 /WX)
+      /W4
+      /WX)
 else()
   target_compile_options(libtestlib
     PRIVATE
-      -Wall -Wextra -Werror)
+      -Wall
+      -Wextra
+      -pedantic
+      -Werror)
 endif()

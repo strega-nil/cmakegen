@@ -10,3 +10,11 @@ target_include_directories(libtestheader
     $<INSTALL_INTERFACE:include>)
 
 target_compile_features(libtestheader INTERFACE cxx_std_14)
+
+if(MSVC)
+  target_compile_options(libtestheader
+    INTERFACE
+      /D_SCL_SECURE_NO_WARNINGS
+      /permissive-)
+endif()
+
