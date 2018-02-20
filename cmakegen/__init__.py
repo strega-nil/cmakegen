@@ -52,7 +52,11 @@ def main():
       help=force_help)
 
   args = ap.parse_args()
-  build_project(args)
+  #build_project(args)
+  print(
+      cmake_lists.executable.substitute(
+        projname=args.project_name,
+        cxx_version=args.std))
 
 def build_project(args):
   proj_dir = Path(Path.cwd(), args.project_name)
