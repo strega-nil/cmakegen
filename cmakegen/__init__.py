@@ -25,6 +25,9 @@ def main():
   force_help = (
     "If the directory already exists, then cmakegen will not fail. "
     "Probably dangerous.")
+  dry_run_help = (
+      "Don't actually do any building, just print out what we're doing. "
+      "Useful for development purposes")
 
   ap = argparse.ArgumentParser(
       description="Create a directory structure for a CMake project")
@@ -38,7 +41,8 @@ def main():
       choices=[14, 17],
       default=default_cxx_version,
       help=standard_version_help,
-      metavar="N")
+      metavar="N",
+      dest="cxx_version")
   ap.add_argument(
       "--kind",
       nargs="?",
@@ -50,48 +54,72 @@ def main():
       "--force",
       action="store_true",
       help=force_help)
+  ap.add_argument(
+      "--dry-run",
+      action="store_true",
+      help=dry_run_help,
+      dest="dry_run")
 
-  args = ap.parse_args()
-  build_project(args)
+  build_project(ap.parse_args())
+
+def mkdir(args, path):
+  if not args.dry_run:
+    path.mkdir(exist_ok=args.force)
+  else:
+    print("make directory: ", path)
+
+def write_file(args, path, to_write):
+  if not args.dry_run:
+    with path.open(mode="w") as file:
+      file.write(to_write)
+  else:
+    print("writing to `", path, "`: ", sep="")
+    print(to_write)
+    print()
 
 def build_project(args):
   proj_dir = Path(Path.cwd(), args.project_name)
-  proj_dir.mkdir(exist_ok=args.force)
+  mkdir(args, proj_dir)
   
   source_dir = Path(proj_dir, "source")
-  source_dir.mkdir(exist_ok=args.force)
+  mkdir(args, source_dir)
 
   include_dir = Path(proj_dir, "include")
-  include_dir.mkdir(exist_ok=args.force)
+  mkdir(args, include_dir)
 
   proj_include_dir = Path(include_dir, args.project_name)
-  proj_include_dir.mkdir(exist_ok=args.force)
+  mkdir(args, proj_include_dir)
 
   cmake_path = Path(proj_dir, "CMakeLists.txt")
-  with cmake_path.open(mode="w") as cmakelists:
-    cmakelists.write(cmake_file(args))
+  write_file(args, cmake_path, cmake_file(args))
 
-  header_filename = args.project_name + ".h"
+  header_path = Path(proj_include_dir, args.project_name + ".h")
 
   if args.kind == KIND_EXE:
-    with Path(proj_include_dir, header_filename).open(mode="w") as header:
-      header.write(
-          cpp_headers.standalone.substitute(projname=args.project_name))
-    with Path(source_dir, "main.cpp").open(mode="w") as main:
-      main.write(cpp_files.executable.substitute(projname=args.project_name))
+    write_file(
+        args,
+        header_path,
+        cpp_headers.standalone.substitute(projname=args.project_name))
+    write_file(
+        args,
+        Path(source_dir, "main.cpp"),
+        cpp_files.executable.substitute(projname=args.project_name))
 
   elif args.kind == KIND_LIB:
-    with Path(proj_include_dir, header_filename).open(mode="w") as header:
-      header.write(
-          cpp_headers.dependent.substitute(projname=args.project_name))
-    lib_file = args.project_name + ".cpp"
-    with Path(source_dir, lib_file).open(mode="w") as lib:
-      lib.write(cpp_files.library.substitute(projname=args.project_name))
+    write_file(
+        args,
+        header_path,
+        cpp_headers.dependent.substitute(projname=args.project_name))
+    write_file(
+        args,
+        Path(source_dir, args.projname + ".cpp"),
+        cpp_files.library.substitute(projname=args.project_name))
 
   else: # header only library
-    with Path(proj_include_dir, header_filename).open(mode="w") as header:
-      header.write(
-          cpp_headers.standalone.substitute(projname=args.project_name))
+    write_file(
+        args,
+        header_path,
+        cpp_headers.standalone.substitute(projname=args.project_name))
 
 def cmake_file(args):
   cml = None
@@ -105,5 +133,7 @@ def cmake_file(args):
   else:
     assert false
 
-  return cml.substitute(projname=args.project_name, cxx_version=args.std)
+  return cml.substitute(
+      projname=args.project_name,
+      cxx_version=args.cxx_version)
 
