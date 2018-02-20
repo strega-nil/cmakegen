@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-namespace testexe {
+namespace testheader {
 
 inline void say_hello() {
-  std::cout << "Hello, world!\n";
+  std::cout << "Hello, world!\\n";
 }
 
 }

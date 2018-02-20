@@ -32,5 +32,6 @@ else()
     PRIVATE
       -Wall
       -Wextra
+      -pedantic
       -Werror)
 endif()

@@ -1,12 +1,9 @@
 import argparse
 from pathlib import Path
 
-import cmake_lists
-from cpp_files import (
-    main_file,
-    library_file,
-    header_file_standalone,
-    header_file_dependent)
+from . import cmake_lists
+from . import cpp_files
+from . import cpp_headers
 
 # TODO(ubsan): add automatic tests to library and headers
 
@@ -74,22 +71,27 @@ def build_project(args):
   with cmake_path.open(mode="w") as cmakelists:
     cmakelists.write(cmake_file(args))
 
-  header_file = args.project_name + ".h"
+  header_filename = args.project_name + ".h"
 
   if args.kind == KIND_EXE:
-    with Path(proj_include_dir, header_file).open(mode="w") as header:
-      header.write(header_file_standalone.format(projname=args.project_name))
+    with Path(proj_include_dir, header_filename).open(mode="w") as header:
+      header.write(
+          cpp_headers.standalone.substitute(projname=args.project_name))
     with Path(source_dir, "main.cpp").open(mode="w") as main:
-      main.write(main_file.format(projname=args.project_name))
+      main.write(cpp_files.executable.substitute(projname=args.project_name))
+
   elif args.kind == KIND_LIB:
-    with Path(proj_include_dir, header_file).open(mode="w") as header:
-      header.write(header_file_dependent.format(projname=args.project_name))
+    with Path(proj_include_dir, header_filename).open(mode="w") as header:
+      header.write(
+          cpp_headers.dependent.substitute(projname=args.project_name))
     lib_file = args.project_name + ".cpp"
     with Path(source_dir, lib_file).open(mode="w") as lib:
-      lib.write(library_file.format(projname=args.project_name))
+      lib.write(cpp_files.library.substitute(projname=args.project_name))
+
   else: # header only library
-    with Path(proj_include_dir, header_file).open(mode="w") as header:
-      header.write(header_file_standalone.format(projname=args.project_name))
+    with Path(proj_include_dir, header_filename).open(mode="w") as header:
+      header.write(
+          cpp_headers.standalone.substitute(projname=args.project_name))
 
 def cmake_file(args):
   cml = None
@@ -99,9 +101,9 @@ def cmake_file(args):
   elif kind == KIND_LIB:
     cml = cmake_lists.library
   elif kind == KIND_HEAD:
-    cml = cmake_lists.header_library
+    cml = cmake_lists.header
   else:
     assert false
 
-  return cml.format(projname=args.project_name, cxx_version=args.std)
+  return cml.substitute(projname=args.project_name, cxx_version=args.std)
 
