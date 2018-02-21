@@ -12,8 +12,6 @@ target_include_directories($projname
 target_compile_features($projname INTERFACE cxx_std_$cxx_version)
 
 if(MSVC)
-  $msvc_warning_hack
-
   target_compile_options($projname
     INTERFACE
       /D_SCL_SECURE_NO_WARNINGS
