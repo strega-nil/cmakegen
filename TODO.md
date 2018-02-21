@@ -2,3 +2,4 @@
 - [ ] run clang-format on the c++ files before saving them
 - [ ] add support for catch2
 - [ ] add support for some form of documentation generator
+- [ ] add tests for the python; `--dry-run` makes this easy
