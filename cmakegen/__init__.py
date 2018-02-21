@@ -1,15 +1,15 @@
 import argparse
 from pathlib import Path
 
-from . import cmake_lists
-from . import cpp_files
-from . import cpp_headers
+from .files import cmake_lists, cpp_files, cpp_headers, clang_format
 
 # TODO(ubsan): add automatic tests to library and headers
 
 KIND_EXE = "executable"
 KIND_LIB = "library"
 KIND_HEAD = "headers"
+
+STYLE_NICOLETTE = "nicolette"
 
 default_cxx_version = 14
 default_kind = KIND_EXE
@@ -23,8 +23,12 @@ def main():
       "(supported values: '{}', '{}', '{}')")
   kind_help = kind_help.format(KIND_EXE, KIND_LIB, KIND_HEAD)
   force_help = (
-    "If the directory already exists, then cmakegen will not fail. "
-    "Probably dangerous.")
+      "If the directory already exists, then cmakegen will not fail. "
+      "Probably dangerous.")
+  clangfmt_help = (
+      "Generates a .clang-format file in the project directory. "
+      "By default, this uses Nicole's preferred style. "
+      "There is currently no support for other styles; it will be added later")
   dry_run_help = (
       "Don't actually do any building, just print out what we're doing. "
       "Useful for development purposes")
@@ -55,11 +59,19 @@ def main():
       action="store_true",
       help=force_help)
   ap.add_argument(
+      "--clang-format",
+      nargs="?",
+      choices=[STYLE_NICOLETTE],
+      default=None,
+      const=STYLE_NICOLETTE,
+      help=clangfmt_help,
+      dest="clang_format")
+  ap.add_argument(
       "--dry-run",
       action="store_true",
       help=dry_run_help,
       dest="dry_run")
-
+  
   build_project(ap.parse_args())
 
 def mkdir(args, path):
@@ -92,6 +104,13 @@ def build_project(args):
 
   cmake_path = Path(proj_dir, "CMakeLists.txt")
   write_file(args, cmake_path, cmake_file(args))
+
+  if args.clang_format is not None:
+    clangfmt_path = Path(proj_dir, ".clang-format")
+    if args.clang_format == STYLE_NICOLETTE:
+      write_file(args, clangfmt_path, clang_format.nicolette)
+    else:
+      assert false
 
   header_path = Path(proj_include_dir, args.project_name + ".h")
 
