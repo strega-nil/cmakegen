@@ -131,7 +131,7 @@ def build_project(args):
         cpp_headers.dependent.substitute(projname=args.project_name))
     write_file(
         args,
-        Path(source_dir, args.projname + ".cpp"),
+        Path(source_dir, args.project_name + ".cpp"),
         cpp_files.library.substitute(projname=args.project_name))
 
   else: # header only library
