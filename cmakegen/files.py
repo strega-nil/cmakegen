@@ -15,8 +15,7 @@ class clang_format:
 def _msvc_warning_hackify(template):
   from string import Template
   actual_hack = """\
-# hack to deal with cmake automatically inserting /W3
-  # stolen from llvm
+# hack to deal with cmake automatically inserting /W3; taken from llvm
   string(REGEX REPLACE " /W[0-4]" "" CMAKE_C_FLAGS "$${CMAKE_C_FLAGS}")
   string(REGEX REPLACE " /W[0-4]" "" CMAKE_CXX_FLAGS "$${CMAKE_CXX_FLAGS}")\
 """
