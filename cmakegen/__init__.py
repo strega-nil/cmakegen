@@ -1,18 +1,7 @@
 import argparse
-from pathlib import Path
 
-from .files import cmake_lists, cpp_files, cpp_headers, clang_format
-
-# TODO(ubsan): add automatic tests to library and headers
-
-KIND_EXE = "executable"
-KIND_LIB = "library"
-KIND_HEAD = "headers"
-
-STYLE_NICOLETTE = "nicolette"
-
-default_cxx_version = 14
-default_kind = KIND_EXE
+from . import generate
+from .options import *
 
 def main():
   standard_version_help = (
@@ -43,116 +32,50 @@ def main():
       "--std",
       nargs="?",
       choices=[14, 17],
-      default=default_cxx_version,
+      default=STANDARD_DEFAULT,
       help=standard_version_help,
       metavar="N",
-      dest="cxx_version")
+      dest="standard")
   ap.add_argument(
       "--kind",
       nargs="?",
       choices=[KIND_EXE, KIND_LIB, KIND_HEAD],
-      default=default_kind,
+      default=KIND_DEFAULT,
       help=kind_help,
       metavar="kind")
   ap.add_argument(
-      "--force",
-      action="store_true",
-      help=force_help)
-  ap.add_argument(
+      "--style",
       "--clang-format",
       nargs="?",
       choices=[STYLE_NICOLETTE],
       default=None,
-      const=STYLE_NICOLETTE,
+      const=STYLE_DEFAULT,
       help=clangfmt_help,
-      dest="clang_format")
-  ap.add_argument(
+      dest="style")
+
+  force_or_dry_run = ap.add_mutually_exclusive_group()
+  force_or_dry_run.add_argument(
+      "--force",
+      action="store_true",
+      help=force_help)
+  force_or_dry_run.add_argument(
       "--dry-run",
       action="store_true",
       help=dry_run_help,
       dest="dry_run")
-  
-  build_project(ap.parse_args())
 
-def mkdir(args, path):
-  if not args.dry_run:
-    path.mkdir(exist_ok=args.force)
+  args = ap.parse_args()
+
+  generator = None
+  if args.dry_run:
+    generator = generate.DryRunGenerator()
   else:
-    print("make directory: ", path)
+    generator = generate.NormalGenerator(args.force)
 
-def write_file(args, path, to_write):
-  if not args.dry_run:
-    with path.open(mode="w") as file:
-      file.write(to_write)
-  else:
-    print("writing to `", path, "`: ", sep="")
-    print(to_write)
-    print()
-
-def build_project(args):
-  proj_dir = Path(Path.cwd(), args.project_name)
-  mkdir(args, proj_dir)
-  
-  source_dir = Path(proj_dir, "source")
-  mkdir(args, source_dir)
-
-  include_dir = Path(proj_dir, "include")
-  mkdir(args, include_dir)
-
-  proj_include_dir = Path(include_dir, args.project_name)
-  mkdir(args, proj_include_dir)
-
-  cmake_path = Path(proj_dir, "CMakeLists.txt")
-  write_file(args, cmake_path, cmake_file(args))
-
-  if args.clang_format is not None:
-    clangfmt_path = Path(proj_dir, ".clang-format")
-    if args.clang_format == STYLE_NICOLETTE:
-      write_file(args, clangfmt_path, clang_format.nicolette)
-    else:
-      assert false
-
-  header_path = Path(proj_include_dir, args.project_name + ".h")
-
-  if args.kind == KIND_EXE:
-    write_file(
-        args,
-        header_path,
-        cpp_headers.standalone.substitute(projname=args.project_name))
-    write_file(
-        args,
-        Path(source_dir, "main.cpp"),
-        cpp_files.executable.substitute(projname=args.project_name))
-
-  elif args.kind == KIND_LIB:
-    write_file(
-        args,
-        header_path,
-        cpp_headers.dependent.substitute(projname=args.project_name))
-    write_file(
-        args,
-        Path(source_dir, args.project_name + ".cpp"),
-        cpp_files.library.substitute(projname=args.project_name))
-
-  else: # header only library
-    write_file(
-        args,
-        header_path,
-        cpp_headers.standalone.substitute(projname=args.project_name))
-
-def cmake_file(args):
-  cml = None
-  kind = args.kind
-  if kind == KIND_EXE:
-    cml = cmake_lists.executable
-  elif kind == KIND_LIB:
-    cml = cmake_lists.library
-  elif kind == KIND_HEAD:
-    cml = cmake_lists.header
-  else:
-    assert false
-
-  return cml.substitute(
-      projname=args.project_name,
-      cxx_version=args.cxx_version)
+  generate.build_project(
+      generator,
+      project_name=args.project_name,
+      style=args.style,
+      kind=args.kind,
+      standard=args.standard)
 
