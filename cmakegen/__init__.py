@@ -10,7 +10,7 @@ def main():
   kind_help = (
       "The kind of project you'd like to build "
       "(supported values: '{}', '{}', '{}')")
-  kind_help = kind_help.format(KIND_EXE, KIND_LIB, KIND_HEAD)
+  kind_help = kind_help.format(KIND_EXE, KIND_LIB, KIND_HEADER)
   force_help = (
       "If the directory already exists, then cmakegen will not fail. "
       "Probably dangerous.")
@@ -31,7 +31,7 @@ def main():
   ap.add_argument(
       "--std",
       nargs="?",
-      choices=[14, 17],
+      choices=STANDARD,
       default=STANDARD_DEFAULT,
       help=standard_version_help,
       metavar="N",
@@ -39,7 +39,7 @@ def main():
   ap.add_argument(
       "--kind",
       nargs="?",
-      choices=[KIND_EXE, KIND_LIB, KIND_HEAD],
+      choices=KIND,
       default=KIND_DEFAULT,
       help=kind_help,
       metavar="kind")
@@ -47,7 +47,7 @@ def main():
       "--style",
       "--clang-format",
       nargs="?",
-      choices=[STYLE_NICOLETTE],
+      choices=STYLE,
       default=None,
       const=STYLE_DEFAULT,
       help=clangfmt_help,
