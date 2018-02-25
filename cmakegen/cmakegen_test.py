@@ -69,14 +69,15 @@ class TestGenerator:
     with pytest.raises(AssertionError):
       generator.write_file(Path("hello/foo"), "hello, world!")
 
-def specific_flags(project_name, style, kind, standard):
+def specific_flags(project_name, style, kind, standard, testing):
   generator = Generator()
   generate.build_project(
       generator,
       project_name=project_name,
       style=style,
       kind=kind,
-      standard=standard)
+      standard=standard,
+      testing=testing)
 
   tree = generator.tree
 
@@ -90,7 +91,7 @@ def specific_flags(project_name, style, kind, standard):
   assert "CMakeLists.txt" in proj
   assert (
       proj["CMakeLists.txt"]
-      == generate.cmake_file(project_name, kind, standard))
+      == generate.cmake_file(project_name, kind, standard, testing))
 
   if style:
     assert ".clang-format" in proj
@@ -138,7 +139,10 @@ def specific_flags(project_name, style, kind, standard):
 def test_all_configurations():
   project_name = "foobar"
   styles = options.STYLE + (None,)
+  #testing = options.TESTING + (None,)
+  testing = (None,)
   for style in styles:
     for kind in options.KIND:
       for standard in options.STANDARD:
-        specific_flags(project_name, style, kind, standard)
+        for tests in testing:
+          specific_flags(project_name, style, kind, standard, tests)

@@ -1,0 +1,9 @@
+/header/
+add_library($projname INTERFACE)
+
+/include_directories_headers/
+/flags_interface/
+
+/warnings/
+
+$tests

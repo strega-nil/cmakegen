@@ -5,22 +5,22 @@ from .options import *
 
 def main():
   standard_version_help = (
-      "The version of the standard you'd like to use "
-      "(supported values: '14', '17')")
+      "The version of the standard you'd like to use"
+      " (supported values: '14', '17')")
   kind_help = (
-      "The kind of project you'd like to build "
-      "(supported values: '{}', '{}', '{}')")
+      "The kind of project you'd like to build"
+      " (supported values: '{}', '{}', '{}')")
   kind_help = kind_help.format(KIND_EXE, KIND_LIB, KIND_HEADER)
-  force_help = (
-      "If the directory already exists, then cmakegen will not fail. "
-      "Probably dangerous.")
+  testing_help = (
+      "Generate a tests directory. By default, this uses catch2."
+      " There is currently no support for other testing frameworks.")
   clangfmt_help = (
-      "Generates a .clang-format file in the project directory. "
-      "By default, this uses Nicole's preferred style. "
-      "There is currently no support for other styles; it will be added later")
+      "Generates a .clang-format file in the project directory."
+      " By default, this uses Nicole's preferred style."
+      " There is currently no support for other styles; it will be added later")
   dry_run_help = (
-      "Don't actually do any building, just print out what we're doing. "
-      "Useful for development purposes")
+      "Don't actually do any building, just print out what we're doing."
+      " Useful for development purposes")
 
   ap = argparse.ArgumentParser(
       description="Create a directory structure for a CMake project")
@@ -52,12 +52,20 @@ def main():
       const=STYLE_DEFAULT,
       help=clangfmt_help,
       dest="style")
+  ap.add_argument(
+      "--tests",
+      "--enable-testing",
+      nargs="?",
+      default=None,
+      const=TESTING_DEFAULT,
+      help=testing_help,
+      dest="testing")
 
   force_or_dry_run = ap.add_mutually_exclusive_group()
   force_or_dry_run.add_argument(
       "--force",
       action="store_true",
-      help=force_help)
+      help=argparse.SUPPRESS)
   force_or_dry_run.add_argument(
       "--dry-run",
       action="store_true",
@@ -77,5 +85,6 @@ def main():
       project_name=args.project_name,
       style=args.style,
       kind=args.kind,
-      standard=args.standard)
+      standard=args.standard,
+      testing=args.testing)
 

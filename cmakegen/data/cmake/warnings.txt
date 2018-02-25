@@ -1,0 +1,15 @@
+function(add_warnings to)
+  if(MSVC)
+    target_compile_options($${to}
+      PRIVATE
+        /W4
+        /WX)
+  else()
+    target_compile_options($${to}
+      PRIVATE
+        -Wall
+        -Wextra
+        -pedantic
+        -Werror)
+  endif()
+endfunction()

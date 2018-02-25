@@ -1,0 +1,11 @@
+/header/
+add_executable($projname
+  source/main.cpp)
+
+/include_directories/
+/flags_interface/
+
+/warnings/
+
+add_warnings($projname)
+$tests

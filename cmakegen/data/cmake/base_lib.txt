@@ -1,0 +1,10 @@
+/header/
+add_library($projname
+  source/$projname.cpp)
+
+/include_directories/
+/flags_interface/
+
+/warnings/
+add_warnings($projname)
+$tests

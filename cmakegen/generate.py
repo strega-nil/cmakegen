@@ -1,10 +1,17 @@
 from pathlib import Path
+from abc import ABC, abstractmethod
 
 from .options import *
 from .files import cmake_lists, cpp_files, cpp_headers, clang_format
 
-class Generator:
+class Generator(ABC):
   def __init__(self): pass
+
+  @abstractmethod
+  def mkdir(self): pass
+
+  @abstractmethod
+  def write_file(self, path, to_write): pass
 
 class NormalGenerator(Generator):
   def __init__(self, force, cwd=None):
@@ -13,25 +20,25 @@ class NormalGenerator(Generator):
     self.cwd = cwd if cwd else Path.cwd()
 
   def mkdir(self, path):
-    path.mkdir(exist_ok=self.force)
+    Path(self.cwd, path).mkdir(exist_ok=self.force)
 
   def write_file(self, path, to_write):
-    with path.open(mode="w") as file:
+    with Path(self.cwd, path).open(mode="w") as file:
       file.write(to_write)
 
 class DryRunGenerator(Generator):
   def __init__(self):
-    super().__init__(cwd=None)
+    super().__init__()
 
   def mkdir(self, path):
-    print("> mkdir", Path(self.cwd, path))
+    print("> mkdir", path)
 
   def write_file(self, path, to_write):
-    print("> writing to `", Path(self.cwd, path), "`: ", sep="")
+    print("> writing to `", Path(path), "`: ", sep="")
     print(to_write)
     print()
 
-def cmake_file(project_name, kind, standard):
+def cmake_file(project_name, kind, standard, testing):
   cml = None
   if kind == KIND_EXE:
     cml = cmake_lists.executable
@@ -42,11 +49,19 @@ def cmake_file(project_name, kind, standard):
   else:
     assert False
 
+  tests = ""
+  if testing:
+    if testing == TESTING_CATCH2:
+      tests = data.get_file("cmake/catch2.txt")
+    else:
+      assert False
+
   return cml.substitute(
       projname=project_name,
-      cxx_version=standard)
+      cxx_version=standard,
+      tests=tests)
 
-def build_project(generator, project_name, kind, standard, style):
+def build_project(generator, project_name, kind, standard, style, testing):
   proj_dir = Path(project_name)
   generator.mkdir(proj_dir)
   
@@ -60,7 +75,8 @@ def build_project(generator, project_name, kind, standard, style):
   generator.mkdir(proj_include_dir)
 
   cmake_path = proj_dir / "CMakeLists.txt"
-  generator.write_file(cmake_path, cmake_file(project_name, kind, standard))
+  generator.write_file(cmake_path,
+      cmake_file(project_name, kind, standard, testing))
 
   if style is not None:
     clangfmt_path = proj_dir / ".clang-format"

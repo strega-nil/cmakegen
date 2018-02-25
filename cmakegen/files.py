@@ -1,3 +1,4 @@
+from string import Template
 from .data import get_template, get_file
 
 class cpp_headers:
@@ -11,19 +12,23 @@ class cpp_files:
 class clang_format:
   nicolette = get_file("nicolette.clang-format")
 
+def _cmake_list_get(name):
+  file = get_file("cmake/base_" + name + ".txt")
+  file = file.replace("/header/", get_file("cmake/header.txt"))
+  file = file.replace(
+      "/include_directories/", get_file("cmake/include_directories.txt"))
+  file = file.replace(
+      "/include_directories_headers/",
+      get_file("cmake/include_directories_headers.txt"))
 
-def _msvc_warning_hackify(template):
-  from string import Template
-  actual_hack = """\
-# hack to deal with cmake automatically inserting /W3; taken from llvm
-  string(REGEX REPLACE " /W[0-4]" "" CMAKE_C_FLAGS "$${CMAKE_C_FLAGS}")
-  string(REGEX REPLACE " /W[0-4]" "" CMAKE_CXX_FLAGS "$${CMAKE_CXX_FLAGS}")\
-"""
-  file = get_template(template)
-  file.template = file.template.replace("$msvc_warning_hack", actual_hack)
-  return file
+  file = file.replace(
+      "/flags_interface/", get_file("cmake/flags_interface.txt"))
+  file = file.replace(
+      "/warnings/", get_file("cmake/warnings.txt"))
+
+  return Template(file)
 
 class cmake_lists:
-  executable = _msvc_warning_hackify("CMakeLists_exe.txt")
-  library = _msvc_warning_hackify("CMakeLists_lib.txt")
-  header = _msvc_warning_hackify("CMakeLists_head.txt")
+  executable = _cmake_list_get("exe")
+  library = _cmake_list_get("lib")
+  header = _cmake_list_get("header")
